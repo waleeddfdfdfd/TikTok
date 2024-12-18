@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Capture to Telegram</title>
+</head>
+<body>
+    <h1>Camera Capture</h1>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <button id="capture">Capture Photo</button>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+
+        // التوكن الخاص بالبوت
+        const telegramToken = '7194341216:AAHn_oZkjAyx7b-AYuRsBTGQKcdPoeni9TA'; 
+        // Chat ID الخاص بالقناة
+        const chatId = ' -1002426247987'; 
+
+        // تشغيل الكاميرا
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                console.error("Error accessing the camera:", err);
+                alert("Failed to access the camera. Please check permissions.");
+            });
+
+        // التقاط الصورة وإرسالها إلى تليجرام
+        captureButton.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // تحويل الصورة إلى Base64
+            const imageData = canvas.toDataURL('image/png');
+
+            // إرسال الصورة إلى تليجرام
+            fetch(`https://api.telegram.org/bot${telegramToken}/sendPhoto`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    photo: imageData,
+                    caption: "تم التقاط صورة بواسطة البوت!"
+                }),
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("تم إرسال الصورة إلى تليجرام بنجاح!");
+                } else {
+                    alert("حدث خطأ أثناء إرسال الصورة.");
+                    console.error("Error response:", response);
+                }
+            })
+            .catch(error => {
+                alert("فشل في الاتصال بتليجرام. تحقق من الإعدادات.");
+                console.error("Fetch error:", error);
+            });
+        });
+    </script>
+</body>
+</html>
